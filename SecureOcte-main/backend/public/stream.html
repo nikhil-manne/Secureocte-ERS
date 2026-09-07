@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SecureMe — Live Tracking</title>
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_GOOGLE_MAPS_API_KEY&callback=onMapsLoaded&loading=async" async defer></script>
+  <style>
+    :root {
+      --bg:      #080D14;
+      --surface: rgba(14,21,32,0.95);
+      --accent:  #38BDF8;
+      --danger:  #F43F5E;
+      --success: #10B981;
+      --text:    #E2E8F0;
+      --muted:   #64748B;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      font-family: Arial, sans-serif;
+      color: var(--text);
+      overflow: hidden;
+    }
+
+    #map { width: 100%; height: 100vh; }
+
+    #topBar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      height: 56px;
+      background: var(--surface);
+      border-bottom: 1px solid rgba(56,189,248,0.2);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 14px;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+    }
+    .brand {
+      font-weight: 800;
+      font-size: 15px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: linear-gradient(90deg, #38BDF8, #8B5CF6);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .divider { width: 1px; height: 20px; background: rgba(255,255,255,0.1); }
+    #statusBadge {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(244,63,94,0.12);
+      border: 1px solid rgba(244,63,94,0.3);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--danger);
+      font-family: Arial, monospace;
+      letter-spacing: 0.5px;
+    }
+    #statusBadge.waiting {
+      background: rgba(245,158,11,0.12);
+      border-color: rgba(245,158,11,0.3);
+      color: #F59E0B;
+    }
+    #statusBadge.connected {
+      background: rgba(244,63,94,0.12);
+      border-color: rgba(244,63,94,0.3);
+      color: var(--danger);
+    }
+    .pulse-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.8)} }
+
+    #coordsDisplay {
+      font-family: Arial, monospace;
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    #lastUpdated {
+      font-family: Arial, monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    #infoCard {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--surface);
+      border: 1px solid rgba(56,189,248,0.2);
+      border-radius: 16px;
+      padding: 16px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+      min-width: 320px;
+      max-width: 92vw;
+    }
+    .info-icon { font-size: 28px; }
+    .info-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 2px; }
+    .info-value { font-size: 15px; font-weight: 700; }
+
+    #permScreen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      gap: 20px;
+      text-align: center;
+      padding: 40px;
+    }
+    #permScreen h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+    #permScreen p {
+      font-size: 14px;
+      color: var(--muted);
+      max-width: 320px;
+      line-height: 1.7;
+    }
+    #startBtn {
+      background: linear-gradient(135deg, #0EA5E9, #8B5CF6);
+      color: white;
+      border: none;
+      padding: 14px 36px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: opacity 0.15s;
+    }
+    #startBtn:hover { opacity: 0.9; }
+
+    .legend {
+      position: fixed;
+      bottom: 110px;
+      right: 20px;
+      background: var(--surface);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 12px;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .legend-item { display: flex; align-items: center; gap: 8px; }
+    .legend-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+<div id="permScreen">
+  <div style="font-size:52px;">📡</div>
+  <h1>🛡 SecureMe<br/>Live Tracking</h1>
+  <p>This link shows the live location of a user in distress.<br/>
+     Allow location access so navigation can be shown from your position.</p>
+  <button id="startBtn">📍 Allow Location & Start</button>
+  <p style="font-size:12px; color:var(--muted); margin-top:-8px;">
+    You can also view without location — the user's position will still update live.
+  </p>
+  <button id="noGpsBtn" style="
+    background:transparent; color:var(--muted); border:1px solid rgba(255,255,255,0.1);
+    padding:10px 24px; border-radius:10px; cursor:pointer; font-size:13px;
+  ">View without my location</button>
+</div>
+
+<div id="map" style="display:none;"></div>
+
+<div id="topBar" style="display:none;">
+  <div class="brand">🛡 SecureMe</div>
+  <div class="divider"></div>
+  <div id="statusBadge" class="waiting">
+    <span class="pulse-dot"></span>
+    <span id="statusText">CONNECTING…</span>
+  </div>
+  <div id="coordsDisplay">—</div>
+  <div id="lastUpdated">—</div>
+</div>
+
+<div id="infoCard" style="display:none;">
+  <div class="info-icon">🔴</div>
+  <div>
+    <div class="info-label">Tracking User</div>
+    <div class="info-value" id="trackingUser">—</div>
+  </div>
+  <div class="divider" style="height:36px;"></div>
+  <div>
+    <div class="info-label">Distance</div>
+    <div class="info-value" id="distanceValue">—</div>
+  </div>
+  <div class="divider" style="height:36px;"></div>
+  <div>
+    <div class="info-label">ETA</div>
+    <div class="info-value" id="etaValue">—</div>
+  </div>
+</div>
+
+<div class="legend" id="mapLegend" style="display:none;">
+  <div class="legend-item"><div class="legend-dot" style="background:#F43F5E;"></div> User (Live)</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#38BDF8;"></div> Your Position</div>
+</div>
+
+<script>
+  /* ── Always point to the production backend, regardless of what
+     host this page is served from. Handles both the dashboard
+     (opens in iframe/window) and direct share links.              ── */
+  const BASE = "https://server-r9k4.onrender.com";
+
+  // Extract streamId from URL: /stream/UUID or ?id=UUID
+  const pathParts = window.location.pathname.split('/');
+  const streamId = pathParts[pathParts.length - 1] ||
+                   new URLSearchParams(window.location.search).get('id');
+
+  let map, directionsService, directionsRenderer;
+  let myMarker = null, userMarker = null;
+  let myPos = null;
+  let pollInterval = null;
+  let trackingUsername = null;
+  let boundsDone = false;
+
+  function initMap(center){
+    document.getElementById('map').style.display = 'block';
+    document.getElementById('topBar').style.display = 'flex';
+    document.getElementById('infoCard').style.display = 'flex';
+    document.getElementById('mapLegend').style.display = 'flex';
+    document.getElementById('permScreen').style.display = 'none';
+
+    map = new google.maps.Map(document.getElementById('map'), {
+      center: center || { lat: 17.385, lng: 78.4867 },
+      zoom: 14,
+      disableDefaultUI: false,
+      mapTypeControl: false,
+      streetViewControl: false,
+      fullscreenControl: true,
+      styles: []
+    });
+
+    directionsService  = new google.maps.DirectionsService();
+    directionsRenderer = new google.maps.DirectionsRenderer({
+      map,
+      suppressMarkers: true,
+      polylineOptions: { strokeColor:'#38BDF8', strokeWeight:5, strokeOpacity:0.85 }
+    });
+  }
+
+  function mapsReady(){
+    return typeof google !== 'undefined' && typeof google.maps !== 'undefined';
+  }
+
+  function waitForMapsAndRun(fn){
+    if(mapsReady()){ fn(); return; }
+    /* Maps not loaded yet — poll every 100ms for up to 10s */
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts++;
+      if(mapsReady()){ clearInterval(timer); fn(); }
+      else if(attempts > 100){
+        clearInterval(timer);
+        document.getElementById('permScreen').innerHTML =
+          '<div style="font-size:48px;">⚠️</div>' +
+          '<h1 style="font-size:20px;margin-top:16px;">Maps failed to load</h1>' +
+          '<p style="color:var(--muted);margin-top:10px;">Check your internet connection and try reloading.</p>' +
+          '<button id="reloadBtn" style="margin-top:20px;background:linear-gradient(135deg,#0EA5E9,#8B5CF6);color:white;border:none;padding:12px 28px;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;">↻ Reload</button>';
+        document.getElementById('reloadBtn').addEventListener('click', () => location.reload());
+      }
+    }, 100);
+  }
+
+  function startTracking(){
+    waitForMapsAndRun(() => {
+      if(!navigator.geolocation){ startTrackingNoGPS(); return; }
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          myPos = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+          initMap(myPos);
+          placeMyMarker(myPos);
+          beginPolling();
+          navigator.geolocation.watchPosition(p => {
+            myPos = { lat: p.coords.latitude, lng: p.coords.longitude };
+            if(myMarker) myMarker.setPosition(myPos);
+          }, null, { enableHighAccuracy:true });
+        },
+        () => startTrackingNoGPS(),
+        { enableHighAccuracy:true, timeout:8000 }
+      );
+    });
+  }
+
+  function startTrackingNoGPS(){
+    waitForMapsAndRun(() => {
+      initMap(null);
+      beginPolling();
+    });
+  }
+
+  function placeMyMarker(pos){
+    if(myMarker){ myMarker.setPosition(pos); return; }
+    myMarker = new google.maps.Marker({
+      position: pos, map,
+      title: 'Your Location',
+      zIndex: 10,
+      icon: {
+        path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+        scale: 6,
+        fillColor: '#38BDF8', fillOpacity: 1,
+        strokeColor: '#ffffff', strokeWeight: 2,
+        rotation: 0
+      }
+    });
+  }
+
+  function placeUserMarker(pos, label){
+    if(userMarker){ userMarker.setPosition(pos); return; }
+    userMarker = new google.maps.Marker({
+      position: pos, map,
+      title: label || 'User (Live)',
+      zIndex: 20,
+      icon: {
+        path: google.maps.SymbolPath.CIRCLE,
+        scale: 11,
+        fillColor: '#F43F5E', fillOpacity: 1,
+        strokeColor: '#ffffff', strokeWeight: 2.5
+      }
+    });
+  }
+
+  function beginPolling(){
+    fetchLocation();
+    pollInterval = setInterval(fetchLocation, 3000);
+  }
+
+  async function fetchLocation(){
+    if(!streamId){ setStatus('waiting', 'INVALID STREAM'); return; }
+    try {
+      const res = await fetch(`${BASE}/api/stream/${streamId}`);
+      if(!res.ok){ setStatus('waiting', 'STREAM NOT FOUND'); return; }
+      const loc = await res.json();
+      if(!loc || loc.latitude == null){ setStatus('waiting', 'WAITING FOR LOCATION…'); return; }
+
+      /* ── Use username for display, not raw userId (ObjectId) ── */
+      trackingUsername = loc.username || loc.userId || trackingUsername || 'Unknown';
+      document.getElementById('trackingUser').textContent = trackingUsername;
+
+      const userPos = { lat: Number(loc.latitude), lng: Number(loc.longitude) };
+      placeUserMarker(userPos, trackingUsername);
+
+      document.getElementById('coordsDisplay').textContent =
+        `${loc.latitude.toFixed(5)}, ${loc.longitude.toFixed(5)}`;
+      document.getElementById('lastUpdated').textContent =
+        'Updated ' + new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+
+      setStatus('connected', '● LIVE');
+
+      if(myPos){
+        directionsService.route({
+          origin: myPos,
+          destination: userPos,
+          travelMode: google.maps.TravelMode.DRIVING
+        }, (result, status) => {
+          if(status === 'OK'){
+            directionsRenderer.setDirections(result);
+            const leg = result.routes[0]?.legs[0];
+            document.getElementById('distanceValue').textContent = leg?.distance?.text || '—';
+            document.getElementById('etaValue').textContent = leg?.duration?.text || '—';
+          }
+        });
+
+        if(!boundsDone){
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(myPos); bounds.extend(userPos);
+          map.fitBounds(bounds, { padding: 100 });
+          boundsDone = true;
+        } else {
+          const currentBounds = map.getBounds();
+          if(currentBounds && !currentBounds.contains(userPos)) map.panTo(userPos);
+        }
+      } else {
+        if(!boundsDone){
+          map.panTo(userPos);
+          map.setZoom(15);
+          boundsDone = true;
+        } else {
+          const currentBounds = map.getBounds();
+          if(currentBounds && !currentBounds.contains(userPos)) map.panTo(userPos);
+        }
+        document.getElementById('distanceValue').textContent = 'No GPS';
+        document.getElementById('etaValue').textContent = 'No GPS';
+      }
+
+    } catch(e){
+      console.error('Poll error:', e);
+      setStatus('waiting', 'CONNECTION ERROR');
+    }
+  }
+
+  function setStatus(type, text){
+    const badge = document.getElementById('statusBadge');
+    badge.className = type;
+    document.getElementById('statusText').textContent = text;
+  }
+
+  /* ── Wire buttons via addEventListener (avoids CSP script-src-attr block) ── */
+  document.getElementById('startBtn').addEventListener('click', startTracking);
+  document.getElementById('noGpsBtn').addEventListener('click', startTrackingNoGPS);
+
+  /* ── Google Maps callback — called by Maps JS when it finishes loading ── */
+  function onMapsLoaded() { /* Maps is ready — nothing to do proactively */ }
+  window.onMapsLoaded = onMapsLoaded;
+</script>
+</body>
+</html>

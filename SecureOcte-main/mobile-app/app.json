@@ -1,0 +1,109 @@
+{
+  "expo": {
+    "name": "SecureOcte",
+    "slug": "expo-safety-test-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/icon.png",
+        "backgroundColor": "#FFFFFF"
+      },
+      "package": "com.nikhil9990.exposafetytestapp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.VIBRATE",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nikhil9990.exposafetytestapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "SecureOcte needs your location to detect high-risk zones and monitor your safety.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "SecureOcte needs background location access to alert you when entering high-risk zones even when the app is not open.",
+        "NSLocationAlwaysUsageDescription": "SecureOcte needs background location access to monitor your safety continuously.",
+        "NSMotionUsageDescription": "SecureOcte uses motion sensors to detect unusual activity and trigger safety alerts.",
+        "NSMicrophoneUsageDescription": "SecureOcte needs microphone access for voice commands.",
+        "NSFaceIDUsageDescription": "SecureOcte uses Face ID to verify your identity during safety checks.",
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "backgroundModes": [
+        "location",
+        "fetch",
+        "remote-notification",
+        "location",
+        "fetch",
+        "remote-notification"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/icon.png"
+    },
+    "plugins": [
+      "expo-asset",
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#A13333",
+          "sounds": []
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "SecureOcte needs your location to detect high-risk zones and monitor your safety.",
+          "locationAlwaysPermission": "SecureOcte needs background location to monitor your safety continuously.",
+          "locationWhenInUsePermission": "SecureOcte needs your location to detect high-risk zones.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "SecureOcte uses Face ID to verify your identity during safety checks."
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "useNextNotificationsApi": true
+          }
+        }
+      ],
+      "expo-secure-store"
+    ],
+    "extra": {
+      "googleApiKey": "AIzaSyD8GC15hDS5hIpg9mEsgFYlpu2zIXM2N7w",
+      "eas": {
+        "projectId": "98b7d7e8-0aca-468e-a177-633764c96ba7"
+      }
+    },
+    "owner": "nikhil990"
+  }
+}

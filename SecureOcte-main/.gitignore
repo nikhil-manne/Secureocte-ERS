@@ -1,0 +1,75 @@
+# =========================
+# Node / React Native / Expo
+# =========================
+
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# Expo
+.expo/
+.expo-shared/
+web-build/
+dist/
+
+# Metro / React Native
+.metro-cache/
+*.hprof
+
+# Android / iOS builds
+android/.gradle/
+android/app/build/
+android/build/
+ios/build/
+
+# =========================
+# Environment & Secrets
+# =========================
+
+.env
+.env.*
+credentials/
+credentials.json
+*.keystore
+*.p12
+*.jks
+
+# =========================
+# Logs & Temp Files
+# =========================
+
+logs/
+*.log
+*.tmp
+*.temp
+
+# =========================
+# OS Files
+# =========================
+
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+
+.vscode/
+.idea/
+
+# =========================
+# Build Outputs
+# =========================
+
+build/
+coverage/
+
+# =========================
+# Misc
+# =========================
+
+*.bak
+*.swp

@@ -1,0 +1,67 @@
+{
+  "expo": {
+    "name": "Patrol Officer",
+    "slug": "patrol-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "image": "./assets/icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0b1329"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "android": {
+      "package": "com.nikhil9990.patrolapp",
+      "config": {
+        "googleMaps": {
+          "apiKey": "YOUR_GOOGLE_MAPS_API_KEY"
+        }
+      },
+      "permissions": [
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION",
+        "android.permission.POST_NOTIFICATIONS"
+      ]
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.nikhil9990.patrolapp",
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "Patrol App needs location access for vehicle navigation and dispatch monitoring.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "Patrol App requires background location to track night-shift officer patrols.",
+        "NSLocationAlwaysUsageDescription": "Patrol App requires location tracking during active patrol shifts."
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Patrol App requires location tracking during active officer shifts.",
+          "isIosBackgroundLocationEnabled": true,
+          "isAndroidBackgroundLocationEnabled": true,
+          "isAndroidForegroundServiceEnabled": true
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/icon.png",
+          "color": "#0284c7"
+        }
+      ]
+    ],
+    "extra": {
+      "googleApiKey": "AIzaSyD8GC15hDS5hIpg9mEsgFYlpu2zIXM2N7w"
+    }
+  }
+}
