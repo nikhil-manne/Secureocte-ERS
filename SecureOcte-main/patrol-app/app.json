@@ -61,7 +61,7 @@
       ]
     ],
     "extra": {
-      "googleApiKey": "AIzaSyD8GC15hDS5hIpg9mEsgFYlpu2zIXM2N7w"
+      "googleApiKey": "YOUR_GOOGLE_MAPS_API_KEY"
     }
   }
 }

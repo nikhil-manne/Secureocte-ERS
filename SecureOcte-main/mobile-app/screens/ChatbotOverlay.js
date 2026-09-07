@@ -101,7 +101,7 @@ export default function ChatbotOverlay({ onClose, onSelect }) {
                 });
               }}
               query={{
-                key: "AIzaSyAzfiI2Oh632S5vjsbDn0s_FMXJuzFGKwk",
+                key: "YOUR_GOOGLE_MAPS_API_KEY",
                 language: "en",
               }}
               styles={{
